@@ -59,6 +59,11 @@ eventEmitter.addListener('NDEFMessages', (event) => {
   _nfcNDEFReaderSessions[event.sessionId].emit('NDEFMessages', event.messages.map(formatMessage));
 });
 
+eventEmitter.addListener('NDEFError', (event) => {
+  console.log({ event });
+  _nfcNDEFReaderSessions[event.sessionId].emit('NDEFError', event.error);
+});
+
 export class NFCNDEFReaderSession {
   constructor({ alertMessage = null, invalidateAfterFirstRead = false } = {}) {
     // ID generated to multiplex session messages over native event emitter
@@ -71,6 +76,7 @@ export class NFCNDEFReaderSession {
     // Event listeners for this session
     this.listenersForType = {
       NDEFMessages: [],
+      NDEFError: []
     };
 
     _nfcNDEFReaderSessions[this.id] = this;
@@ -89,7 +95,13 @@ export class NFCNDEFReaderSession {
         resolve(messages);
         session.release();
       }
+      const errorListener = (error) => {
+        session.removeEventListener('NDEFError', errorListener);
+        reject(error);
+        session.release();
+      }
       session.addEventListener('NDEFMessages', listener);
+      session.addEventListener('NDEFError', errorListener);
       session.begin();
     });
   }

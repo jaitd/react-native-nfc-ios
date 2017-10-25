@@ -31,7 +31,7 @@ RCT_EXPORT_MODULE();
 
 - (NSArray<NSString *> *)supportedEvents
 {
-    return @[@"NDEFMessages"];
+    return @[@"NDEFMessages", @"NDEFError"];
 }
 
 - (void)readerSession:(NFCNDEFReaderSession *)session
@@ -68,6 +68,12 @@ RCT_EXPORT_MODULE();
 
 - (void)readerSession:(NFCNDEFReaderSession *)session
 didInvalidateWithError:(NSError *)error {
+    [self sendEventWithName:@"NDEFError"
+                       body: @{
+                               @"sessionId": [nfcNDEFReaderSessionsToId objectForKey:session],
+                               @"error": error
+                               }
+     ];
 }
 
 // Will be called when this module's last listener is removed, or on dealloc.
