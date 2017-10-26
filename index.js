@@ -23,6 +23,9 @@ const recordTypes = {
   6: UNCHANGED_RECORD,
 };
 
+const EVENT_MESSAGES = 'NDEFMessages';
+const EVENT_ERRORS = 'NDEFError';
+
 let nextInstanceId = 0;
 function genInstanceId() {
   const id = nextInstanceId;
@@ -54,14 +57,20 @@ function formatMessage(message) {
 }
 
 const eventEmitter = new NativeEventEmitter(nativeModule);
-eventEmitter.addListener('NDEFMessages', (event) => {
+eventEmitter.addListener(EVENT_MESSAGES, (event) => {
   console.log({ event });
-  _nfcNDEFReaderSessions[event.sessionId].emit('NDEFMessages', event.messages.map(formatMessage));
+  const session = _nfcNDEFReaderSessions[event.sessionId];
+  if (session) {
+    session.emit(EVENT_MESSAGES, event.messages.map(formatMessage));
+  }
 });
 
-eventEmitter.addListener('NDEFError', (event) => {
+eventEmitter.addListener(EVENT_ERRORS, (event) => {
   console.log({ event });
-  _nfcNDEFReaderSessions[event.sessionId].emit('NDEFError', event.error);
+  const session = _nfcNDEFReaderSessions[event.sessionId];
+  if (session) {
+    session.emit(EVENT_ERRORS, event.error);
+  }
 });
 
 export class NFCNDEFReaderSession {
@@ -75,8 +84,8 @@ export class NFCNDEFReaderSession {
 
     // Event listeners for this session
     this.listenersForType = {
-      NDEFMessages: [],
-      NDEFError: []
+      [EVENT_MESSAGES]: [],
+      [EVENT_ERRORS]: []
     };
 
     _nfcNDEFReaderSessions[this.id] = this;
@@ -93,15 +102,25 @@ export class NFCNDEFReaderSession {
       const listener = (messages) => {
         session.removeEventListener('NDEFMessages', listener);
         resolve(messages);
+
+        session.removeEventListener(EVENT_MESSAGES, listener);
+        session.removeEventListener(EVENT_ERRORS, errorListener);
+
         session.release();
       }
       const errorListener = (error) => {
         session.removeEventListener('NDEFError', errorListener);
         reject(error);
+
+        session.removeEventListener(EVENT_MESSAGES, listener);
+        session.removeEventListener(EVENT_ERRORS, errorListener);
+
         session.release();
       }
-      session.addEventListener('NDEFMessages', listener);
-      session.addEventListener('NDEFError', errorListener);
+
+      session.addEventListener(EVENT_MESSAGES, listener);
+      session.addEventListener(EVENT_ERRORS, errorListener);
+
       session.begin();
     });
   }
