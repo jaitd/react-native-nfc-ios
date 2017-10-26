@@ -26,7 +26,13 @@ RCT_EXPORT_MODULE();
 
 - (NSDictionary *)constantsToExport
 {
-    return @{ @"NFCNDEFReaderSession_readingAvailable": [NSNumber numberWithBool:[NFCNDEFReaderSession readingAvailable]]};
+    BOOL readingAvailable = false;
+    
+    if (@available(iOS 11.0, *)) {
+        readingAvailable = [NFCNDEFReaderSession readingAvailable];
+    }
+    
+    return @{ @"NFCNDEFReaderSession_readingAvailable": [NSNumber numberWithBool: readingAvailable]};
 }
 
 - (NSArray<NSString *> *)supportedEvents
