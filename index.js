@@ -58,7 +58,9 @@ function formatMessage(message) {
 
 const eventEmitter = new NativeEventEmitter(nativeModule);
 eventEmitter.addListener(EVENT_MESSAGES, (event) => {
+  if (__DEV__) {
   console.log({ event });
+  }
   const session = _nfcNDEFReaderSessions[event.sessionId];
   if (session) {
     session.emit(EVENT_MESSAGES, event.messages.map(formatMessage));
@@ -66,7 +68,9 @@ eventEmitter.addListener(EVENT_MESSAGES, (event) => {
 });
 
 eventEmitter.addListener(EVENT_ERRORS, (event) => {
+  if (__DEV__) {
   console.log({ event });
+  }
   const session = _nfcNDEFReaderSessions[event.sessionId];
   if (session) {
     session.emit(EVENT_ERRORS, event.error);
