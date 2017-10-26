@@ -1,5 +1,5 @@
 {
-  "name": "react-native-nfc-ios",
+  "name": "@orda/react-native-nfc-ios",
   "version": "0.1.5",
   "description": "Use iOS 11+ CoreNFC with React Native",
   "main": "index.js",
