@@ -68,10 +68,31 @@ RCT_EXPORT_MODULE();
 
 - (void)readerSession:(NFCNDEFReaderSession *)session
 didInvalidateWithError:(NSError *)error {
+    BOOL ignore = false;
+    BOOL cancelled = false;
+    
+    switch (error.code) {
+        case NFCReaderSessionInvalidationErrorFirstNDEFTagRead:
+            ignore = true;
+            break;
+        case NFCReaderSessionInvalidationErrorUserCanceled:
+            
+        case NFCReaderErrorSecurityViolation:
+            cancelled = true;
+            break;
+        default:
+            break;
+    }
+    
+    if (ignore) {
+        return;
+    }
+    
     [self sendEventWithName:@"NDEFError"
                        body: @{
                                @"sessionId": [nfcNDEFReaderSessionsToId objectForKey:session],
-                               @"error": error
+                               @"error": [NSNumber numberWithInt:error.code],
+                               @"cancelled": [NSNumber numberWithBool:cancelled]
                                }
      ];
 }
