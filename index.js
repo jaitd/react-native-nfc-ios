@@ -59,7 +59,7 @@ function formatMessage(message) {
 const eventEmitter = new NativeEventEmitter(nativeModule);
 eventEmitter.addListener(EVENT_MESSAGES, (event) => {
   if (__DEV__) {
-  console.log({ event });
+    console.log({ event });
   }
   const session = _nfcNDEFReaderSessions[event.sessionId];
   if (session) {
@@ -69,7 +69,7 @@ eventEmitter.addListener(EVENT_MESSAGES, (event) => {
 
 eventEmitter.addListener(EVENT_ERRORS, (event) => {
   if (__DEV__) {
-  console.log({ event });
+    console.log({ event });
   }
   const session = _nfcNDEFReaderSessions[event.sessionId];
   if (session) {
@@ -99,12 +99,18 @@ export class NFCNDEFReaderSession {
   static readingAvailable = nativeModule.NFCNDEFReaderSession_readingAvailable;
 
   static readTag({ alertMessage } = {}) {
-    const session = new NFCNDEFReaderSession({ alertMessage, invalidateAfterFirstRead: true });
-
-    let listener;
     return new Promise((resolve, reject) => {
+      let resolved = false;
+
+      const session = new NFCNDEFReaderSession({ alertMessage, invalidateAfterFirstRead: true });
+
       const listener = (messages) => {
-        session.removeEventListener('NDEFMessages', listener);
+        if (!resolved) {
+          resolved = true;
+        } else {
+          return;
+        }
+
         resolve(messages);
 
         session.removeEventListener(EVENT_MESSAGES, listener);
@@ -113,7 +119,12 @@ export class NFCNDEFReaderSession {
         session.release();
       }
       const errorListener = (error) => {
-        session.removeEventListener('NDEFError', errorListener);
+        if (!resolved) {
+          resolved = true;
+        } else {
+          return;
+        }
+
         reject(error);
 
         session.removeEventListener(EVENT_MESSAGES, listener);
