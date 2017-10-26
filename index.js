@@ -131,7 +131,7 @@ export class NFCNDEFReaderSession {
 
   ensureExists() {
     if (!_nfcNDEFReaderSessions[this.id]) {
-      throw new Error('Session does not exists anymore.')
+      throw new Error('Session does not exist anymore.')
     }
   }
 
